@@ -1,0 +1,57 @@
+{% extends '../base.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <h2>Sistema de Presença de Aluno por QR Code</h2>
+    <hr />
+    <div class="col-md-6">
+        {% if cam_status %}
+        <h3>Status do fluxo da câmera: Ligada</h3>
+        <img src="{% url 'camera_feed' %}" style="width: 540px; height: 400px;" />
+        {% else %}
+        <h3>Status do fluxo da câmera: a câmera não está acessível ou está ocupada</h3>
+        <h5>Coisas para checar: </h5>
+        <ul class="text-right list-inline">
+            <li>Conexão USB?</li>
+            <li>Número da câmera em seu arquivo .env?</li>
+            <li>A câmera já está em uso?</li>
+        </ul>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<script>
+    $("#btn_ReadQRCode").on("click", function (e) {
+        console.log("Ajax request triggered.");
+        e.preventDefault();
+        $.ajax({
+            type: "POST",
+            url: "{% url 'camera_feed' %}",
+            data: {
+                csrfmiddlewaretoken: "{{ csrf_token }}",
+                dataType: "json",
+            },
+            success: function (data) {
+                if (data.barcode_data !== null && data.barcode_data !== '') {
+                    console.log(data);
+                    $("#txt_BarcodeData").html(data.barcode_data);
+                    $("#lbl_LastModified").html(
+                        "Last modified at: " + data.file_saved_at
+                    );
+                } else {
+                    console.log(data);
+                    $("#txt_BarcodeData").html("");
+                    $("#lbl_LastModified").html("<h3><em>No data or file not found. Scan barcode again.</em></h3>");
+                }
+            },
+            error: function () {
+                console.log(error);
+            }
+        });
+    });
+</script>
+{% endblock content %}
